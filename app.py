@@ -394,9 +394,9 @@ if prompt := st.chat_input("Ask a business question... (e.g. 'Are we oversold?')
             raw_data_csv = df_pipeline[raw_cols].to_csv(index=False) if not df_pipeline.empty else "No deals found."
             
             # Truncate raw data to prevent Groq API token limits (413 Payload Too Large)
-            # 1 token is approx 4 chars. Limit to 15,000 chars (~3750 tokens)
-            if len(raw_data_csv) > 15000:
-                raw_data_csv = raw_data_csv[:15000] + "\n...[DATA TRUNCATED DUE TO LLM TOKEN LIMITS]..."
+            # 1 token is approx 4 chars. Limit to 5,000 chars (~1250 tokens) to be extremely safe on the 6000 TPM limit
+            if len(raw_data_csv) > 5000:
+                raw_data_csv = raw_data_csv[:5000] + "\n...[DATA TRUNCATED DUE TO LLM TOKEN LIMITS]..."
             
             context_snapshot = f"""
             [BI Engine Output]:
