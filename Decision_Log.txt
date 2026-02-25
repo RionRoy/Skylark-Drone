@@ -1,0 +1,30 @@
+Decision Log
+
+1. Technology Stack
+The application is built using a lightweight, Python-driven stack chosen for rapid prototyping, data science, and analytics capabilities.
+- Frontend and Hosting: Streamlit and Streamlit Community Cloud. This allows for purely Python-based UI generation without needing a separate React/Node.js frontend.
+- Backend Logic: Python 3.
+- Data Processing: Pandas. Chosen for its deterministic, highly efficient tabular data manipulation to clean and aggregate the messy Monday.com data before it reaches the AI.
+- AI Engine: Groq API using the LLaMA 3.1 8B model. Chosen for its exceptionally fast inference speed, bypassing OpenAI API costs.
+- Data Source: Monday.com GraphQL API. Used to seamlessly extract boards and column values dynamically based on IDs.
+- Visualizations: Plotly Express. Powers interactive, dynamic charts that render natively within Streamlit without heavy JS libraries.
+
+2. Key Assumptions Made
+- Monday.com Naming Conventions: We assumed the linkage between the Pipeline Board and the Operations Board relies primarily on exact text matching of deal statuses. Because these are often entered manually by different team members, spelling variations can occur, which the cleaner normalizes.
+- Missing Data is User Error: We assumed that empty revenue fields or missing dates on the Pipeline board were a result of urgent user data entry rather than a systemic API failure. Therefore, we safely sanitized and defaulted to baseline values (like 0.0 for missing money) rather than throwing fatal runtime errors.
+- Executive Time Constraints: For the AI response formatting, we assumed leaders do not want to read long paragraphs of narrative text. They want immediate numbers and immediate risk identification, hence the concise summaries.
+
+3. Trade-offs Chosen and Why
+- Python Analytics vs. LLM Analytics: We chose to use strict Python (Pandas) rules to clean data, normalize missing money values, and build total metrics, rather than asking the LLM to read the raw data and calculate the pipeline health itself. LLMs are notoriously bad at basic arithmetic and deterministic grouping. This trade-off guarantees mathematical accuracy for all displayed aggregations.
+- Raw Context Injection vs. Vector Database (RAG): Instead of building a complex Vector Database to give the AI access to the entire multi-board dataset via semantic search, we chose to inject a truncated slice (maximum 5000 characters) of pre-cleaned CSV data directly into the system prompt's context window. This prioritizes speed and simplicity over the ability to endlessly query historical, granular row data, preventing Groq from crashing via token limits.
+
+4. What We Would Do Differently With More Time
+- Fuzzy Entity Matching Engine: Instead of relying on rigid string matching to link Deals to Work Orders, we would implement advanced Fuzzy String Matching. This would automatically connect an operations ticket named "Corp. Deal V2" to a sales pipeline deal named "Corporate Deal - V2".
+- Webhooks to a SQL Database: Currently, every time a user asks a question, the agent makes a fresh, rate-limited HTTP call to Monday.com. With more time, we would implement an asynchronous webhook architecture that streams Monday.com changes into a local PostgreSQL database, allowing for instant, unlimited querying without API bottlenecks.
+- Conversational Chart Interactivity: The current charts are injected statically onto the Streamlit canvas. With more time, we would leverage Plotly click-events to allow executives to click a slice of the pie chart and automatically trigger a deeply specific follow-up AI query to drill down into that specific sector.
+
+5. How We Interpreted Leadership Updates
+We interpreted a "Leadership Update" as a highly structured, instantly digestible executive briefing designed for a C-suite persona who only has 30 seconds to spare. Rather than a conversational chat feature, a Leadership Update was implemented as a rigid framework. It bypasses open-ended conversational niceties and enforces a strict three-part output rubric:
+- The Core Financials: Hard numbers representing the current state of active versus won revenue.
+- The Ghost Deal Risk: Immediate surfacing of the gap between the Sales team (marking things complete) and the Operations team (lagging or unaware).
+- Data Quality Caveats: We mandated that the AI must intentionally report on its own data source, explicitly listing how many deals had to be forcefully defaulted. This forces transparency so leadership knows the exact reliability of the update they just read.
