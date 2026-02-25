@@ -372,6 +372,11 @@ if prompt := st.chat_input("Ask a business question... (e.g. 'Are we oversold?')
             raw_deals = connector.fetch_board_data(DEALS_BOARD_ID)
             raw_wo = connector.fetch_board_data(WORK_ORDERS_BOARD_ID)
             
+            if "error" in raw_deals:
+                cleaner.data_quality_notes.append(f"MONDAY API ERROR (PIPELINE): {raw_deals['error']}")
+            if "error" in raw_wo:
+                cleaner.data_quality_notes.append(f"MONDAY API ERROR (OPERATIONS): {raw_wo['error']}")
+                
             deals_extracted = connector.extract_items(raw_deals)
             wo_extracted = connector.extract_items(raw_wo)
             
