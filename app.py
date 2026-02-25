@@ -8,13 +8,21 @@ from datetime import datetime, date
 from dotenv import load_dotenv
 from groq import Groq
 
-# Load environment variables
+# Load environment variables (for local runs)
 load_dotenv()
 
-MONDAY_API_KEY = os.getenv("MONDAY_API_KEY", "")
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
-DEALS_BOARD_ID = os.getenv("DEALS_BOARD_ID", "")
-WORK_ORDERS_BOARD_ID = os.getenv("WORK_ORDERS_BOARD_ID", "")
+def get_secret(key, default=""):
+    try:
+        if key in st.secrets:
+            return st.secrets[key]
+    except Exception:
+        pass
+    return os.getenv(key, default)
+
+MONDAY_API_KEY = get_secret("MONDAY_API_KEY", "")
+GROQ_API_KEY = get_secret("GROQ_API_KEY", "")
+DEALS_BOARD_ID = get_secret("DEALS_BOARD_ID", "")
+WORK_ORDERS_BOARD_ID = get_secret("WORK_ORDERS_BOARD_ID", "")
 
 # =========================================================
 # 1. Monday.com Integration
