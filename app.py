@@ -338,24 +338,17 @@ st.set_page_config(page_title="Executive BI Agent", page_icon="📊", layout="wi
 st.title("Executive Intelligence Agent")
 st.markdown("Powered by Groq, Monday.com, and strict Data Resilience Strategies.")
 
-with st.sidebar:
-    st.header("Connection Settings")
-    API_KEY_OVERRIDE = st.text_input("Monday API Key", value=MONDAY_API_KEY, type="password")
-    GROQ_OVERRIDE = st.text_input("Groq API Key (Free)", value=GROQ_API_KEY, type="password")
-    DEALS_ID_OVERRIDE = st.text_input("Pipeline Board ID", value=DEALS_BOARD_ID)
-    WO_ID_OVERRIDE = st.text_input("Operations Board ID", value=WORK_ORDERS_BOARD_ID)
-    
-    if st.button("Reset Session / Clear Cache"):
-        st.session_state.messages = []
-
-# Apply overrides
-if API_KEY_OVERRIDE: MONDAY_API_KEY = API_KEY_OVERRIDE
-if GROQ_OVERRIDE: GROQ_API_KEY = GROQ_OVERRIDE
-if DEALS_ID_OVERRIDE: DEALS_BOARD_ID = DEALS_ID_OVERRIDE
-if WO_ID_OVERRIDE: WORK_ORDERS_BOARD_ID = WO_ID_OVERRIDE
+# Apply environment configurations automatically
+# MONDAY_API_KEY, GROQ_API_KEY, etc. are loaded at the top from st.secrets / .env
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
+
+with st.sidebar:
+    st.header("🛠️ Dashboard Controls")
+    st.success("Connected via Environment Secrets")
+    if st.button("Reset Session / Clear Chat"):
+        st.session_state.messages = []
 
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
@@ -392,12 +385,18 @@ if prompt := st.chat_input("Ask a business question... (e.g. 'Are we oversold?')
             cross_board_risk = bi_engine.cross_board_operational_risk(df_pipeline, df_operations)
             deal_stage_funnel = bi_engine.calculate_deal_stage_funnel(df_pipeline)
             
+            raw_cols = [c for c in df_pipeline.columns if c in ["Deal Name", "Sector_Norm", "Status_Norm", "Deal_Value", "Date_Norm"]]
+            raw_data_csv = df_pipeline[raw_cols].to_csv(index=False) if not df_pipeline.empty else "No deals found."
+            
             context_snapshot = f"""
             [BI Engine Output]:
             Pipeline & Revenue Metrics: {pipeline_health}
             Sector Performance Breakdown: {sector_health}
             Cross-Board Capacity/Bottlenecks: {cross_board_risk}
             Deal Stages (Funnel): {deal_stage_funnel}
+            
+            [Raw Cleaned Deal Data for Dynamic Queries (e.g. answering "What is this week's revenue?")]:
+            {raw_data_csv}
             """
             
             # LLM Interpretation
